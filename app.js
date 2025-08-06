@@ -7,12 +7,14 @@ app.use(cors());
 const PORT = 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
+// Correct import paths
 const UserModel = require("./modal/Login");
-const FlightModal = require(".modal/Flight");
-const ContactUsModal = require(".modal/ContactUs");
-const BookDataModal = require(".modal/Booking");
-const RegsiterModal = require(".modal/Register");
-const UserSubscription = require(".modal/Subcribe");
+const FlightModal = require("./modal/Flight");
+const ContactUsModal = require("./modal/ContactUs");
+const BookDataModal = require("./modal/Booking");
+const RegsiterModal = require("./modal/Register");
+const UserSubscription = require("./modal/Subcribe");
+
 const jwt = require("jsonwebtoken");
 
 
