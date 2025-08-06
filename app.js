@@ -8,12 +8,13 @@ const PORT = 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
 const UserModel = require("./modal/Login");
-const FlightModal = require("../Backend/modal/Flight");
-const ContactUsModal = require("../Backend/modal/ContactUs");
-const BookDataModal = require("../Backend/modal/Booking");
-const RegsiterModal = require("../Backend/modal/Register");
-const UserSubscription = require("../Backend/modal/Subcribe");
+const FlightModal = require(".modal/Flight");
+const ContactUsModal = require(".modal/ContactUs");
+const BookDataModal = require(".modal/Booking");
+const RegsiterModal = require(".modal/Register");
+const UserSubscription = require(".modal/Subcribe");
 const jwt = require("jsonwebtoken");
+
 
 connectDB();
 app.use(
