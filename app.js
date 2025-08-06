@@ -15,6 +15,7 @@ const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
 const jwt = require("jsonwebtoken");
 
+
 connectDB();
 app.use(
   cors({
