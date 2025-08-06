@@ -7,21 +7,18 @@ app.use(cors());
 const PORT = 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
-// Correct import paths
 const UserModel = require("./modal/Login");
 const FlightModal = require("./modal/Flight");
 const ContactUsModal = require("./modal/ContactUs");
 const BookDataModal = require("./modal/Booking");
 const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
-
 const jwt = require("jsonwebtoken");
-
 
 connectDB();
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://jaadooyaatra.netlify.app/",
     methods: ["POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -198,9 +195,6 @@ app.get("/getData", async (req, res) => {
     res.status(500).json({ msg: "Internal Server Error " });
   }
 });
-
-
-
 
 app.delete("/delete/:userId", async (req, res) => {
   try {
