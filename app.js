@@ -7,7 +7,7 @@ app.use(cors());
 const PORT = 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
-const UserModel = require("../Backend/modal/Login");
+const UserModel = require("../Backend/modal/Login.js");
 const FlightModal = require("../Backend/modal/Flight");
 const ContactUsModal = require("../Backend/modal/ContactUs");
 const BookDataModal = require("../Backend/modal/Booking");
