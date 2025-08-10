@@ -3,7 +3,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const cors = require("cors");
-app.use(cors());
 const PORT = 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
@@ -15,14 +14,22 @@ const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
 const jwt = require("jsonwebtoken");
 
-
 connectDB();
 app.use(
   cors({
-    origin: "https://jaadooyaatra.netlify.app/",
-    methods: ["POST"],
+    origin: "https://jaadooyaatra.netlify.app",
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+  })
+);
+
+// Preflight handling
+app.options(
+  "*",
+  cors({
+    origin: "https://jaadooyaatra.netlify.app",
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
