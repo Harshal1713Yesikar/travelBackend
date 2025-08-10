@@ -17,7 +17,7 @@ const jwt = require("jsonwebtoken");
 connectDB();
 app.use(
   cors({
-    origin: "https://jaadooyaatra.netlify.app",
+    origin: "https://jadoo-yatra.netlify.app/",
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -27,7 +27,7 @@ app.use(
 app.options(
   "*",
   cors({
-    origin: "https://jaadooyaatra.netlify.app",
+    origin: "https://jadoo-yatra.netlify.app/",
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
