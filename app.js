@@ -13,26 +13,21 @@ const BookDataModal = require("./modal/Booking");
 const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
 const jwt = require("jsonwebtoken");
+const Register = require("./modal/Register");
 
 connectDB();
+
 app.use(
   cors({
-    origin: "https://jadoo-yatra.netlify.app",
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    origin: [
+      "https://jadoo-yatra.netlify.app", // Main deployed frontend
+      /\.netlify\.app$/, // Allow all netlify preview URLs
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // If you're using cookies or auth headers
   })
 );
-
-// Preflight handling
-app.options(
-  "*",
-  cors({
-    origin: "https://jadoo-yatra.netlify.app",
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
 app.get("/", (req, res) => {
   res.send("Hii harshal");
 });
@@ -201,6 +196,40 @@ app.get("/getData", async (req, res) => {
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ msg: "Internal Server Error " });
+  }
+});
+
+app.post("/update", async (req, res) => {
+  try {
+    const { userId, newEmail } = req.body;
+
+    if (!userId || !newEmail) {
+      return res
+        .status(400)
+        .json({ msg: "User ID and new email are required" });
+    }
+
+    // Normalize email
+    const normalizedEmail = newEmail.toLowerCase().trim();
+
+    const updateData = await RegsiterModal.findOneAndUpdate(
+      { _id: userId },
+      { email: normalizedEmail },
+      { new: true, runValidators: true }
+    );
+
+    if (!updateData) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    console.log("updateData", updateData);
+    res.status(200).json({
+      msg: "Email updated successfully",
+      user: updateData,
+    });
+  } catch (error) {
+    console.error("Error Updating Data:", error);
+    res.status(500).json({ msg: "Internal Server Error" });
   }
 });
 
