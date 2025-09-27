@@ -4,6 +4,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const cors = require("cors");
 const PORT = 3001;
+// const dotenv = require("dotenv");
+// dotenv.config();
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
 const UserModel = require("./modal/Login");
@@ -12,25 +14,78 @@ const ContactUsModal = require("./modal/ContactUs");
 const BookDataModal = require("./modal/Booking");
 const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
+const DestinationBooking = require("./modal/Bookings");
 const jwt = require("jsonwebtoken");
-const Register = require("./modal/Register");
 
 connectDB();
 
 app.use(
   cors({
-    origin: [
-      "https://jadoo-yatra.netlify.app", // Main deployed frontend
-      /\.netlify\.app$/, // Allow all netlify preview URLs
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: ["http://localhost:3000", "https://jadoo-yatra.netlify.app"],
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // If you're using cookies or auth headers
   })
 );
+app.options("*", cors());
+
+// app.options(
+//   "*",
+//   cors({
+//     origin: "https://jaadooyaatra.netlify.app",
+//     methods: ["GET", "POST", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     credentials: true,
+//   })
+// );
 app.get("/", (req, res) => {
   res.send("Hii harshal");
 });
+
+app.post("/api/bookings", async (req, res) => {
+  try {
+    const booking = new DestinationBooking(req.body);
+    const savedBooking = await booking.save();
+    res.status(201).json(savedBooking);
+    console.log(savedBooking);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to save booking" });
+  }
+});
+
+app.get("/DestinationsBook", async (req, res) => {
+  try {
+    const bookings = await DestinationBooking.find();
+    res.json(bookings);
+    console.log(bookings);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+});
+
+// DELETE Destination API
+app.delete("/deleteDestination/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const deleteDesti = await DestinationBooking.findByIdAndDelete(userId);
+
+    if (!deleteDesti) {
+      return res.status(404).json({ msg: "Destination not found" });
+    }
+
+    console.log(deleteDesti, "Destination Deleted");
+    res.status(200).json({
+      msg: "Destination Deleted Successfully",
+      deleted: deleteDesti,
+    });
+  } catch (error) {
+    console.error("Delete Error:", error);
+    res.status(500).json({ msg: "Internal Server Error" });
+  }
+});
+
 
 app.post("/subscribe", async (req, res) => {
   try {
