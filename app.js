@@ -1,44 +1,77 @@
 const express = require("express");
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 const cors = require("cors");
 const PORT = 3001;
-// const dotenv = require("dotenv");
-// dotenv.config();
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
 const UserModel = require("./modal/Login");
 const FlightModal = require("./modal/Flight");
 const ContactUsModal = require("./modal/ContactUs");
-const BookDataModal = require("./modal/Booking");
 const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
 const DestinationBooking = require("./modal/Bookings");
+const hotelBookings = require("./modal/Hotelbooking");
 const jwt = require("jsonwebtoken");
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 connectDB();
 
 app.use(
   cors({
     origin: ["http://localhost:3000", "https://jadoo-yatra.netlify.app"],
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.options("*", cors());
 
-// app.options(
-//   "*",
-//   cors({
-//     origin: "https://jaadooyaatra.netlify.app",
-//     methods: ["GET", "POST", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//     credentials: true,
-//   })
-// );
-app.get("/", (req, res) => {
-  res.send("Hii harshal");
+
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
+app.post("/hotelbooking", async (req, res) => {
+  try {
+    const { firstname, lastname, email, phone } = req.body;
+
+    if (!firstname || !lastname || !email || !phone) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const hoteldata = new hotelBookings(req.body);
+    await hoteldata.save();
+
+    return res.status(201).json({
+      message: "Booking successful",
+      booking: hoteldata,
+    });
+
+  } catch (error) {
+    console.error("Error Saving Hotel Data:", error);
+    return res.status(500).json({
+      error: "Something went wrong, please try again later",
+    });
+  }
+});
+
+app.post("/contactUs", async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    const UserData = new ContactUsModal({ name, email, message });
+    await UserData.save();
+    res.json({ message: "Request received successfully!" });
+    console.log("Received Request:", req.body);
+    console.log(UserData, "User Sent Message");
+  } catch (error) {
+    console.log("Something Error", error);
+  }
 });
 
 app.post("/api/bookings", async (req, res) => {
@@ -46,25 +79,14 @@ app.post("/api/bookings", async (req, res) => {
     const booking = new DestinationBooking(req.body);
     const savedBooking = await booking.save();
     res.status(201).json(savedBooking);
-    console.log(savedBooking);
+    console.log(savedBooking,"bookdesti");
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to save booking" });
   }
 });
 
-app.get("/DestinationsBook", async (req, res) => {
-  try {
-    const bookings = await DestinationBooking.find();
-    res.json(bookings);
-    console.log(bookings);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to fetch bookings" });
-  }
-});
 
-// DELETE Destination API
 app.delete("/deleteDestination/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -85,7 +107,6 @@ app.delete("/deleteDestination/:userId", async (req, res) => {
     res.status(500).json({ msg: "Internal Server Error" });
   }
 });
-
 
 app.post("/subscribe", async (req, res) => {
   try {
@@ -312,18 +333,7 @@ app.delete("/delete/:userId", async (req, res) => {
   }
 });
 
-app.post("/contactUs", async (req, res) => {
-  try {
-    const { name, email, message } = req.body;
-    const UserData = new ContactUsModal({ name, email, message });
-    await UserData.save();
-    res.json({ message: "Request received successfully!" });
-    console.log("Received Request:", req.body);
-    console.log(UserData, "User Sent Message");
-  } catch (error) {
-    console.log("Something Error", error);
-  }
-});
+
 
 app.post("/flight", async (req, res) => {
   try {
