@@ -18,17 +18,23 @@ app.use(express.urlencoded({ extended: true }));
 
 connectDB();
 
+// app.use(
+//   cors({
+//     origin: ["http://localhost:3000", "https://jadoo-yatra.netlify.app"],
+//     methods: "GET,POST,PUT,DELETE,OPTIONS",
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
+
 app.use(
   cors({
     origin: ["http://localhost:3000", "https://jadoo-yatra.netlify.app"],
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.options("*", cors());
-
-
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -52,9 +58,7 @@ app.post("/hotelbooking", async (req, res) => {
       message: "Booking successful",
       booking: hoteldata,
     });
-
   } catch (error) {
-    console.error("Error Saving Hotel Data:", error);
     return res.status(500).json({
       error: "Something went wrong, please try again later",
     });
@@ -67,10 +71,8 @@ app.post("/contactUs", async (req, res) => {
     const UserData = new ContactUsModal({ name, email, message });
     await UserData.save();
     res.json({ message: "Request received successfully!" });
-    console.log("Received Request:", req.body);
-    console.log(UserData, "User Sent Message");
   } catch (error) {
-    console.log("Something Error", error);
+    console.error("Something Error", error);
   }
 });
 
@@ -79,13 +81,11 @@ app.post("/api/bookings", async (req, res) => {
     const booking = new DestinationBooking(req.body);
     const savedBooking = await booking.save();
     res.status(201).json(savedBooking);
-    console.log(savedBooking,"bookdesti");
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to save booking" });
   }
 });
-
 
 app.delete("/deleteDestination/:userId", async (req, res) => {
   try {
@@ -97,7 +97,6 @@ app.delete("/deleteDestination/:userId", async (req, res) => {
       return res.status(404).json({ msg: "Destination not found" });
     }
 
-    console.log(deleteDesti, "Destination Deleted");
     res.status(200).json({
       msg: "Destination Deleted Successfully",
       deleted: deleteDesti,
@@ -150,9 +149,6 @@ app.post("/subscribe", async (req, res) => {
       email: normalizedEmail,
     });
     await newSubscription.save();
-
-    console.log(`New subscription: ${normalizedEmail}`);
-
     return res.status(201).json({
       success: true,
       msg: "Successfully subscribed! Check your email for exclusive deals.",
@@ -162,7 +158,6 @@ app.post("/subscribe", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Subscription error:", error);
     if (error.code === 11000) {
       return res
         .status(400)
@@ -198,8 +193,6 @@ app.post("/register", async (req, res) => {
       password: hashedPassword,
     });
 
-    console.log(newUser, "Register Created");
-
     await newUser.save();
 
     const token = jwt.sign(
@@ -221,7 +214,6 @@ app.post("/register", async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({ msg: "Email Already Exists" });
     }
-    console.error("Registration Error:", error);
     res.status(500).json({ msg: "Internal Server Error" });
   }
 });
@@ -230,10 +222,7 @@ app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log(email, "email entered");
-
     const user = await UserModel.findOne({ email: email.toLowerCase() });
-    console.log(user, "User login Successfully");
 
     if (!user) {
       return res.status(400).json({ msg: "User Not Found" });
@@ -259,7 +248,6 @@ app.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login Error:", error);
     res.status(500).json({ msg: "Internal Server Error" });
   }
 });
@@ -267,10 +255,8 @@ app.post("/login", async (req, res) => {
 app.get("/getData", async (req, res) => {
   try {
     const ReadData = await RegsiterModal.find();
-    console.log("readData", ReadData);
     res.status(200).json(ReadData);
   } catch (error) {
-    console.error("Error fetching data:", error);
     res.status(500).json({ msg: "Internal Server Error " });
   }
 });
@@ -298,13 +284,11 @@ app.post("/update", async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    console.log("updateData", updateData);
     res.status(200).json({
       msg: "Email updated successfully",
       user: updateData,
     });
   } catch (error) {
-    console.error("Error Updating Data:", error);
     res.status(500).json({ msg: "Internal Server Error" });
   }
 });
@@ -323,37 +307,42 @@ app.delete("/delete/:userId", async (req, res) => {
       return res.status(404).json({ msg: "User Not Found" });
     }
 
-    console.log("Deleted User:", DeleteData);
     res
       .status(200)
       .json({ msg: "User Deleted Successfully", user: DeleteData });
   } catch (error) {
-    console.error("Delete Error:", error);
     res.status(500).json({ msg: "Internal Server Error" });
   }
 });
 
-
-
 app.post("/flight", async (req, res) => {
   try {
-    const { city, arrivalCity, date, number } = req.body;
-    console.log("Received Data:", req.body);
+    const { city, arrivalCity, date, number, returnDate } = req.body;
 
     if (!city || !arrivalCity || !date || !number) {
       return res.status(400).json({ msg: "All fields are required" });
     }
 
-    const UserData = new FlightModal({ city, arrivalCity, date, number });
+    if (tripType === "round-trip" && !returnDate) {
+      return res
+        .status(400)
+        .json({ msg: "Return date is required for round-trip." });
+    }
+
+    const UserData = new FlightModal({
+      city,
+      arrivalCity,
+      date,
+      number,
+      returnDate,
+    });
     await UserData.save();
 
-    console.log("Flight Data Saved:", UserData);
     return res.status(201).json({
       message: "Flight registered successfully!",
       data: UserData,
     });
   } catch (error) {
-    console.error("Error Saving Flight Data:", error);
     return res.status(500).json({
       error: "Something went wrong, please try again later",
     });
@@ -369,10 +358,8 @@ app.post("/book", async (req, res) => {
     const UserData = new BookDataModal({ name, date, number });
     await UserData.save();
     res.json({ message: "Request received successfully!" });
-    console.log("Received Request:", req.body);
-    console.log(UserData, "User Sent Message");
   } catch (error) {
-    console.log("Something Error", error);
+    console.error("Something Error", error);
   }
 });
 
