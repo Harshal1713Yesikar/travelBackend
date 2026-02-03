@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 8080;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
 const UserModel = require("./modal/Login");
-const FlightModal = require("./modal/Flight");
+const FlightModal = require("./modal/Flight");  
 const ContactUsModal = require("./modal/ContactUs");
 const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
@@ -19,29 +19,24 @@ app.use(express.urlencoded({ extended: true }));
 
 connectDB();
 
-// app.use(
-//   cors({
-//     origin: ["http://localhost:3000", "https://jadoo-yatra.netlify.app"],
-//     methods: "GET,POST,PUT,DELETE,OPTIONS",
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://jadoo-yatra.netlify.app"],
+     origin: [
+      "http://localhost:3000",
+      "https://jadoo-yatra.netlify.app",
+      "https://d1t4y6i7vwrtd3.cloudfront.net",
+      "http://my-react-frontend-myapp1.s3-website.eu-north-1.amazonaws.com"
+    ],
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-app.options("*", cors());
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
+
+app.get("/", (req, res) => {
+  res.status(200).send("Backend is running successfully 🚀");
 });
 
 app.post("/hotelbooking", async (req, res) => {
@@ -318,7 +313,7 @@ app.delete("/delete/:userId", async (req, res) => {
 
 app.post("/flight", async (req, res) => {
   try {
-    const { city, arrivalCity, date, number, returnDate } = req.body;
+    const { city, arrivalCity, date, number, returnDate,tripType  } = req.body;
 
     if (!city || !arrivalCity || !date || !number) {
       return res.status(400).json({ msg: "All fields are required" });
@@ -328,7 +323,7 @@ app.post("/flight", async (req, res) => {
       return res
         .status(400)
         .json({ msg: "Return date is required for round-trip." });
-    }
+    }x
 
     const UserData = new FlightModal({
       city,
@@ -365,5 +360,6 @@ app.post("/book", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("Server Running");
+  console.log(`Server running on port ${PORT}`);
 });
+
