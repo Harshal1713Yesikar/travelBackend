@@ -12,5 +12,8 @@
     "mongoose": "^7.0.0",
     "bcrypt": "^5.1.0",
     "jsonwebtoken": "^9.0.0"
-  }
+  },
+  "engines": {
+    "node": "16.x"
+  }  
 }
