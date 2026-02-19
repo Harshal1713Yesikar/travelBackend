@@ -1,8 +1,8 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-// const PORT = 3001;
-const PORT = process.env.PORT || 3001;
+const PORT = 3001;
+// const PORT = process.env.PORT || 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
 const UserModel = require("./modal/Login");
@@ -26,6 +26,7 @@ app.use(
       "http://localhost:3000",
       "https://jadoo-yatra.netlify.app",
       "https://d1t4y6i7vwrtd3.cloudfront.net",
+      "http://my-react-frontend-myapp1.s3-website.eu-north-1.amazonaws.com"
     ],
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -358,7 +359,7 @@ app.post("/book", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT,() => {
   console.log(`Server running on port ${PORT}`);
 });
 
