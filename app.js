@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const PORT = 3001;
-// const PORT = process.env.PORT || 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
 const UserModel = require("./modal/Login");
@@ -103,68 +102,76 @@ app.delete("/deleteDestination/:userId", async (req, res) => {
   }
 });
 
-app.post("/subscribe", async (req, res) => {
-  try {
-    const { email } = req.body;
+// app.post("/subscribe", async (req, res) => {
+//   try {
+//     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ success: false, msg: "Email is required" });
-    }
+//     if (!email) {
+//       return res.status(400).json({ success: false, msg: "Email is required" });
+//     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res
-        .status(400)
-        .json({ success: false, msg: "Please enter a valid email address" });
-    }
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res
+//         .status(400)
+//         .json({ success: false, msg: "Please enter a valid email address" });
+//     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-    const existingUser = await UserSubscription.findOne({
-      email: normalizedEmail,
-    });
+//     const normalizedEmail = email.toLowerCase().trim();
+//     const existingUser = await UserSubscription.findOne({
+//       email: normalizedEmail,
+//     });
 
-    if (existingUser) {
-      if (existingUser.isActive) {
-        return res
-          .status(400)
-          .json({ success: false, msg: "Email is already subscribed" });
-      } else {
-        existingUser.isActive = true;
-        existingUser.subscribedAt = new Date();
-        await existingUser.save();
+//     if (existingUser) {
+//       if (existingUser.isActive) {
+//         return res
+//           .status(400)
+//           .json({ success: false, msg: "Email is already subscribed" });
+//       } else {
+//         existingUser.isActive = true;
+//         existingUser.subscribedAt = new Date();
+//         await existingUser.save();
 
-        return res.status(200).json({
-          success: true,
-          msg: "Subscription reactivated successfully!",
-          data: { email: existingUser.email },
-        });
-      }
-    }
+//         return res.status(200).json({
+//           success: true,
+//           msg: "Subscription reactivated successfully!",
+//           data: { email: existingUser.email },
+//         });
+//       }
+//     }
 
-    const newSubscription = new UserSubscription({
-      email: normalizedEmail,
-    });
-    await newSubscription.save();
-    return res.status(201).json({
-      success: true,
-      msg: "Successfully subscribed! Check your email for exclusive deals.",
-      data: {
-        email: newSubscription.email,
-        subscribedAt: newSubscription.subscribedAt,
-      },
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({ success: false, msg: "Email is already subscribed" });
-    }
-    return res.status(500).json({
-      success: false,
-      msg: "Something went wrong. Please try again later.",
-    });
-  }
+//     const newSubscription = new UserSubscription({
+//       email: normalizedEmail,
+//     });
+//     await newSubscription.save();
+//     return res.status(201).json({
+//       success: true,
+//       msg: "Successfully subscribed! Check your email for exclusive deals.",
+//       data: {
+//         email: newSubscription.email,
+//         subscribedAt: newSubscription.subscribedAt,
+//       },
+//     });
+//   } catch (error) {
+//     if (error.code === 11000) {
+//       return res
+//         .status(400)
+//         .json({ success: false, msg: "Email is already subscribed" });
+//     }
+//     return res.status(500).json({
+//       success: false,
+//       msg: "Something went wrong. Please try again later.",
+//     });
+//   }
+// });
+
+
+
+app.post("/subscribe", (req, res) => {
+  console.log("Subscribe hit");
+  res.status(200).json({ message: "Working" });
 });
+
 
 app.post("/register", async (req, res) => {
   try {
