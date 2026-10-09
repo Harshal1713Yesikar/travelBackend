@@ -1,16 +1,11 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-// const PORT = 3001;
-<<<<<<< HEAD
-const PORT = process.env.PORT || 8080;
-=======
-const PORT = process.env.PORT || 3000;
->>>>>>> parent of 6f79482 (Fix port for Elastic Beanstalk2)
+const PORT = 3001;
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/db");
 const UserModel = require("./modal/Login");
-const FlightModal = require("./modal/Flight");  
+const FlightModal = require("./modal/Flight");
 const ContactUsModal = require("./modal/ContactUs");
 const RegsiterModal = require("./modal/Register");
 const UserSubscription = require("./modal/Subcribe");
@@ -23,24 +18,361 @@ app.use(express.urlencoded({ extended: true }));
 
 connectDB();
 
+const dotenv = require("dotenv");
+const Groq = require("groq-sdk");
+
+dotenv.config();
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 app.use(
   cors({
-     origin: [
-      "http://localhost:3000",
-      "https://jadoo-yatra.netlify.app",
-      "https://d1t4y6i7vwrtd3.cloudfront.net",
-      "http://my-react-frontend-myapp1.s3-website.eu-north-1.amazonaws.com"
-    ],
+    origin: ["http://localhost:3000", "https://jadoo-yatra.netlify.app"],
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
+app.options("*", cors());
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { messages } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({
+        error: "Messages are required",
+      });
+    }
+
+    if (messages.length === 0) {
+      return res.status(400).json({
+        error: "At least one message is required",
+      });
+    }
+
+    const completion = await groq.chat.completions.create({
+      model: "openai/gpt-oss-20b",
+
+      messages: [
+        {
+          role: "system",
+          content: `
+You are Jadoo AI, the travel assistant for the Jadoo travel website.
+
+You help users with:
+- Hotels
+- Flights
+- Destinations
+- Trip planning
+- Travel tips
+- Itineraries
+- Travel budgets
+
+IMPORTANT:
+Return ONLY valid JSON.
+Do not use markdown.
+Do not use code fences.
+Do not add any text before or after the JSON.
+
+Always return exactly this structure:
+
+{
+  "reply": "your response",
+  "action": null
+}
+
+There are 3 possible actions.
+
+--------------------------------
+1. HOTEL SEARCH
+--------------------------------
+
+If the user wants to search, find, or look for hotels:
+
+{
+  "reply": "Sure! I can help you search hotels in Mumbai.",
+  "action": {
+    "type": "hotel_search",
+    "destination": "Mumbai"
+  }
+}
+
+Use hotel_search when the user says things like:
+- hotel
+- hotels
+- hotel search
+- hotel room
+- stay
+- place to stay
+- accommodation
+
+--------------------------------
+2. FLIGHT SEARCH
+--------------------------------
+
+If the user wants to search, find, or look for flights:
+
+{
+  "reply": "Sure! I can help you search flights from Mumbai to Dubai.",
+  "action": {
+    "type": "flight_search",
+    "from": "Mumbai",
+    "to": "Dubai"
+  }
+}
+
+Use flight_search when the user says things like:
+- flight
+- flights
+- flight search
+- fly
+- plane ticket
+- flight ticket
+
+Only create flight_search when both departure and destination are known.
+
+If one is missing, ask the user for the missing location and return action null.
+
+--------------------------------
+3. DESTINATION SEARCH
+--------------------------------
+
+If the user wants to explore, see, open, visit, discover, or check a specific destination:
+
+{
+  "reply": "Sure! Let's explore Goa.",
+  "action": {
+    "type": "destination_search",
+    "destination": "Goa"
+  }
+}
+
+Use destination_search when the user says things like:
+- destination
+- destinations
+- explore
+- discover
+- places to visit
+- visit
+- travel to
+- show me
+- see destination
+- destination dekhna hai
+- destination explore karna hai
+
+--------------------------------
+EXAMPLES
+--------------------------------
+
+User:
+"Mujhe Mumbai mein hotel chahiye"
+
+Return:
+{
+  "reply": "Sure! I can help you search hotels in Mumbai.",
+  "action": {
+    "type": "hotel_search",
+    "destination": "Mumbai"
+  }
+}
+
+User:
+"Mumbai me hotel search karo"
+
+Return:
+{
+  "reply": "Sure! I can help you search hotels in Mumbai.",
+  "action": {
+    "type": "hotel_search",
+    "destination": "Mumbai"
+  }
+}
+
+User:
+"Mumbai se Dubai flight search karo"
+
+Return:
+{
+  "reply": "Sure! I can help you search flights from Mumbai to Dubai.",
+  "action": {
+    "type": "flight_search",
+    "from": "Mumbai",
+    "to": "Dubai"
+  }
+}
+
+User:
+"Mumbai se flight chahiye"
+
+Return:
+{
+  "reply": "Sure! Mumbai se flight ke liye destination city bataiye.",
+  "action": null
+}
+
+User:
+"Mujhe Goa destination dekhna hai"
+
+Return:
+{
+  "reply": "Sure! Let's explore Goa.",
+  "action": {
+    "type": "destination_search",
+    "destination": "Goa"
+  }
+}
+
+User:
+"Goa explore karna hai"
+
+Return:
+{
+  "reply": "Sure! Let's explore Goa.",
+  "action": {
+    "type": "destination_search",
+    "destination": "Goa"
+  }
+}
+
+User:
+"Goa ghoomne jaana hai"
+
+Return:
+{
+  "reply": "Sure! Let's explore Goa.",
+  "action": {
+    "type": "destination_search",
+    "destination": "Goa"
+  }
+}
+
+User:
+"Mujhe India ke best destinations batao"
+
+Return:
+{
+  "reply": "India has many amazing destinations such as Goa, Kerala, Rajasthan, Kashmir and Himachal Pradesh.",
+  "action": null
+}
+
+User:
+"India me ghoomne ke liye best jagah kaunsi hai?"
+
+Return:
+{
+  "reply": "India me Goa, Kerala, Kashmir, Rajasthan aur Himachal Pradesh bahut popular destinations hain.",
+  "action": null
+}
+
+--------------------------------
+IMPORTANT RULES
+--------------------------------
+
+- Create an action when the user clearly wants to open/search/explore a specific hotel, flight, or destination.
+- Destination requests must use destination_search.
+- Hotel requests must use hotel_search.
+- Flight requests must use flight_search.
+- General travel questions must have action null.
+- Never claim that a booking has been completed.
+- Never say that you have actually booked a hotel or flight.
+- Keep replies short and useful.
+- Reply in the same language as the user.
+- destination/from/to must contain only the place name.
+- Do not put extra explanation inside action fields.
+- Return valid JSON only.
+          `,
+        },
+
+        ...messages,
+      ],
+
+      temperature: 0.2,
+      max_completion_tokens: 500,
+    });
+
+    const rawReply =
+      completion.choices?.[0]?.message?.content?.trim() || "{}";
+
+    console.log("🤖 AI RAW RESPONSE:", rawReply);
+
+    let aiResponse;
+
+    try {
+      aiResponse = JSON.parse(rawReply);
+
+      // Safety check
+      if (!aiResponse.reply) {
+        aiResponse.reply = "How can I help you with your travel plans?";
+      }
+
+      if (!Object.prototype.hasOwnProperty.call(aiResponse, "action")) {
+        aiResponse.action = null;
+      }
+
+    } catch (parseError) {
+      console.error("❌ JSON Parse Error:", parseError);
+      console.error("Raw AI Response:", rawReply);
+
+      aiResponse = {
+        reply: rawReply,
+        action: null,
+      };
+    }
+
+    return res.status(200).json(aiResponse);
+
+  } catch (error) {
+    console.error("❌ Groq Error:", error);
+
+    return res.status(500).json({
+      error: "AI response failed",
+    });
+  }
+});
 
 
-app.get("/", (req, res) => {
-  res.status(200).send("Backend is running successfully 🚀");
+
+app.post("/hotelbooking", async (req, res) => {
+  try {
+    const {
+      firstname,
+      lastname,
+      email,
+      phone,
+    } = req.body;
+
+    if (!firstname || !lastname || !email || !phone) {
+      return res.status(400).json({
+        error: "All fields are required",
+      });
+    }
+
+    const hoteldata = new hotelBookings(req.body);
+
+    await hoteldata.save();
+
+    return res.status(201).json({
+      message: "Booking successful",
+      booking: hoteldata,
+    });
+
+  } catch (error) {
+    console.error("Hotel Booking Error:", error);
+
+    return res.status(500).json({
+      error: "Something went wrong, please try again later",
+    });
+  }
 });
 
 app.post("/hotelbooking", async (req, res) => {
@@ -198,7 +530,7 @@ app.post("/register", async (req, res) => {
     const token = jwt.sign(
       { email: newUser.email, userid: newUser._id },
       "your_secret_key",
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     res.status(201).json({
@@ -235,7 +567,7 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign(
       { email: user.email, userid: user._id },
       "your_secret_key",
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     res.status(200).json({
@@ -277,7 +609,7 @@ app.post("/update", async (req, res) => {
     const updateData = await RegsiterModal.findOneAndUpdate(
       { _id: userId },
       { email: normalizedEmail },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updateData) {
@@ -317,7 +649,7 @@ app.delete("/delete/:userId", async (req, res) => {
 
 app.post("/flight", async (req, res) => {
   try {
-    const { city, arrivalCity, date, number, returnDate,tripType  } = req.body;
+    const { city, arrivalCity, date, number, returnDate } = req.body;
 
     if (!city || !arrivalCity || !date || !number) {
       return res.status(400).json({ msg: "All fields are required" });
@@ -327,7 +659,7 @@ app.post("/flight", async (req, res) => {
       return res
         .status(400)
         .json({ msg: "Return date is required for round-trip." });
-    }x
+    }
 
     const UserData = new FlightModal({
       city,
@@ -364,6 +696,5 @@ app.post("/book", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server Running");
 });
-
